@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class SphereSimulation : Game
 {
@@ -53,6 +54,9 @@ public class SphereSimulation : Game
         _graphics.PreferredBackBufferWidth = 1920;
         _graphics.PreferredBackBufferHeight = 1080;
         _graphics.ApplyChanges();
+
+        // Enable depth testing
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
         _eSpheres = new List<ESphere>();
         _mpSpheres = new List<MPSphere>();
@@ -138,16 +142,23 @@ public class SphereSimulation : Game
         {
             pass.Apply();
 
-            // Draw MP spheres first (in the background)
-            foreach (var sphere in _mpSpheres)
-            {
-                sphere.Draw(GraphicsDevice, _basicEffect);
-            }
+            // Combine and sort all spheres by Z-depth
+            var allSpheres = _mpSpheres.Cast<object>().Concat(_eSpheres.Cast<object>())
+                .Select(s => new
+                {
+                    Sphere = s,
+                    ZDepth = s is MPSphere mp ? mp.Position.Z : ((ESphere)s).Position.Z
+                })
+                .OrderBy(s => s.ZDepth)
+                .ToList();
 
-            // Draw E spheres last (in the foreground)
-            foreach (var sphere in _eSpheres)
+            // Draw all spheres in order of Z-depth
+            foreach (var sphere in allSpheres)
             {
-                sphere.Draw(GraphicsDevice, _basicEffect);
+                if (sphere.Sphere is MPSphere mp)
+                    mp.Draw(GraphicsDevice, _basicEffect);
+                else
+                    ((ESphere)sphere.Sphere).Draw(GraphicsDevice, _basicEffect);
             }
         }
 
