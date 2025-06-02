@@ -9,7 +9,7 @@ public class ESphere
     private float _repulsionStrength;
     private Model? _sphereModel;
     private Microsoft.Xna.Framework.Color _color = Microsoft.Xna.Framework.Color.Yellow;
-    private const float SIZE = 0.2f; // Increased size for better visibility
+    private float _size = 0.1f; // Restored to previous size
 
     public Vector3 Position => _position;
     public Vector3 Velocity => _velocity;
@@ -19,6 +19,7 @@ public class ESphere
         _position = position;
         _repulsionStrength = repulsionStrength;
         _velocity = Vector3.Zero;
+        _size = 0.1f; // Initialize size
     }
 
     public void Update(GameTime gameTime, List<ESphere> eParticles, List<MPSphere> mpParticles)
@@ -36,7 +37,7 @@ public class ESphere
                 if (distance < 0.1f) continue;
 
                 // Inverse square law for repulsion (0.1x of MP attraction)
-                float force = _repulsionStrength * 20.0f / (distance * distance); // 0.1 * 200.0f
+                float force = _repulsionStrength * 2.0f / (distance * distance); // Keep at 1/10 (2.0f)
                 acceleration += direction * force;
             }
         }
@@ -49,7 +50,7 @@ public class ESphere
             if (distance < 0.1f) continue;
 
             // Inverse square law for attraction (base force)
-            float force = mpParticle.AttractionStrength * 200.0f / (distance * distance);
+            float force = mpParticle.AttractionStrength * 200.0f / (distance * distance); // Restored to original (200.0f)
             acceleration += direction * force;
         }
 
@@ -59,7 +60,7 @@ public class ESphere
         _position += _velocity * deltaTime;
 
         // Keep particles within bounds
-        float bounds = 20f;
+        float bounds = 2000f; // Increased from 20f to 2000f
         _position = Vector3.Clamp(_position, new Vector3(-bounds), new Vector3(bounds));
     }
 
@@ -68,7 +69,7 @@ public class ESphere
         // Create a simple sphere mesh if we don't have one
         if (_sphereModel == null)
         {
-            _sphereModel = CreateSphere(graphicsDevice, SIZE, 16);
+            _sphereModel = CreateSphere(graphicsDevice, _size, 16);
         }
 
         // Set up world matrix for this sphere

@@ -18,7 +18,7 @@ public class SphereSimulation : Game
     // Simulation parameters
     private int _numESpheres = 10;
     private int _numMPSpheres = 2;
-    private float _eSphereSize = 1.0f;
+    private float _eSphereSize = 0.1f;
     private float _mpSphereSize = 1.5f;
     private float _repulsionStrength = 5.0f;
     private float _attractionStrength = 3.0f;
@@ -30,6 +30,11 @@ public class SphereSimulation : Game
     private Vector3 _cameraTarget = Vector3.Zero;
     private Vector3 _cameraUp = Vector3.Up;
     private float _cameraRotation = 0f;
+    private float _cameraDistance = 40f;
+    private MouseState _previousMouseState;
+    private bool _isPanning = false;
+    private Vector2 _lastMousePosition;
+    private float _panSpeed = 0.1f;
 
     private KeyboardState _previousKeyboardState;
 
@@ -210,6 +215,44 @@ public class SphereSimulation : Game
     {
         var keyboardState = Keyboard.GetState();
         var previousKeyboardState = _previousKeyboardState;
+        var mouseState = Mouse.GetState();
+        var previousMouseState = _previousMouseState;
+
+        // Handle mouse panning
+        if (mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
+        {
+            if (!_isPanning)
+            {
+                _isPanning = true;
+                _lastMousePosition = new Vector2(mouseState.X, mouseState.Y);
+            }
+            else
+            {
+                Vector2 currentMousePosition = new Vector2(mouseState.X, mouseState.Y);
+                Vector2 delta = currentMousePosition - _lastMousePosition;
+                
+                // Calculate pan direction in world space
+                Vector3 right = Vector3.Cross(_cameraUp, Vector3.Normalize(_cameraPosition - _cameraTarget));
+                Vector3 up = Vector3.Up;
+                
+                // Apply panning to camera target
+                _cameraTarget -= right * delta.X * _panSpeed;
+                _cameraTarget += up * delta.Y * _panSpeed;
+                
+                _lastMousePosition = currentMousePosition;
+            }
+        }
+        else
+        {
+            _isPanning = false;
+        }
+
+        // Handle mouse wheel zoom
+        if (mouseState.ScrollWheelValue != previousMouseState.ScrollWheelValue)
+        {
+            float zoomDelta = (mouseState.ScrollWheelValue - previousMouseState.ScrollWheelValue) * 0.01f;
+            _cameraDistance = MathHelper.Clamp(_cameraDistance - zoomDelta, 5f, 100f);
+        }
 
         // Handle input
         if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
@@ -283,15 +326,16 @@ public class SphereSimulation : Game
             }
         }
 
-        // Store the current keyboard state for the next frame
+        // Store the current keyboard and mouse states for the next frame
         _previousKeyboardState = keyboardState;
+        _previousMouseState = mouseState;
 
         // Update camera position
         _cameraRotation += 0.001f;
         _cameraPosition = new Vector3(
-            (float)Math.Cos(_cameraRotation) * 40,
+            (float)Math.Cos(_cameraRotation) * _cameraDistance,
             20,
-            (float)Math.Sin(_cameraRotation) * 40
+            (float)Math.Sin(_cameraRotation) * _cameraDistance
         );
     }
 } 

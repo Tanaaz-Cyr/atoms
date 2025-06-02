@@ -77,7 +77,7 @@ public class MPSphere
         _position += _velocity * deltaTime;
 
         // Keep particles within bounds
-        float bounds = 20f;
+        float bounds = 2000f;
         _position = Vector3.Clamp(_position, new Vector3(-bounds), new Vector3(bounds));
     }
 
@@ -95,16 +95,15 @@ public class MPSphere
             _sphereModel = CreateSphere(graphicsDevice, 0.5f * _size, 16);
         }
 
-        // Set up world matrix for this sphere
-        effect.World = Matrix.CreateTranslation(_position);
-        effect.DiffuseColor = _color.ToVector3();
-
         // Draw the sphere
         foreach (var mesh in _sphereModel.Meshes)
         {
             foreach (var meshPart in mesh.MeshParts)
             {
                 meshPart.Effect = effect;
+                effect.DiffuseColor = new Vector3(1.0f, 0.0f, 0.0f); // Pure red color
+                effect.EmissiveColor = new Vector3(0.8f, 0.0f, 0.0f); // Increased emissive red to make it glow more
+                effect.World = Matrix.CreateScale(_size) * Matrix.CreateTranslation(_position);
             }
             mesh.Draw();
         }

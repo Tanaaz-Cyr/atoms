@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SourceFile>C:/Users/yaser/Documents/Apps/Personal/atom/Content/Font.spritefont </SourceFile>
+  <SourceTime>2025-06-01T17:57:05.7249694+05:30</SourceTime>
+  <DestFile>C:/Users/yaser/Documents/Apps/Personal/atom/Content/Font.xnb</DestFile>
+  <DestTime>2025-06-01T18:03:43.3076055+05:30</DestTime>
+  <Importer>FontDescriptionImporter</Importer>
+  <ImporterTime>2025-04-05T15:40:54+05:30</ImporterTime>
+  <Processor>FontDescriptionProcessor</Processor>
+  <ProcessorTime>2025-04-05T15:40:54+05:30</ProcessorTime>
+  <Parameters>
+    <Key>PremultiplyAlpha</Key>
+    <Value>True</Value>
+  </Parameters>
+  <Parameters>
+    <Key>TextureFormat</Key>
+    <Value>Compressed</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>
