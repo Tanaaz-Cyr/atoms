@@ -169,46 +169,12 @@ public class SphereSimulation : Game
 
         // Draw UI
         _spriteBatch.Begin();
-        _spriteBatch.DrawString(_font, $"E Particles: {_numESpheres}/{MAX_E_PARTICLES} (Ctrl+1: Add, Ctrl+2: Remove Random)", new Vector2(10, 10), Microsoft.Xna.Framework.Color.White);
-        _spriteBatch.DrawString(_font, $"MP Particles: {_numMPSpheres}/{MAX_MP_PARTICLES} (Ctrl+3: Add, Ctrl+4: Remove Random)", new Vector2(10, 30), Microsoft.Xna.Framework.Color.White);
+        _spriteBatch.DrawString(_font, $"E Particles: {_numESpheres}/{MAX_E_PARTICLES} (1: Add 1, 2: Add MP, 3: Remove E, 4: Remove MP)", new Vector2(10, 10), Microsoft.Xna.Framework.Color.White);
+        _spriteBatch.DrawString(_font, $"MP Particles: {_numMPSpheres}/{MAX_MP_PARTICLES} (Ctrl+1: Add 100E, Ctrl+2: Add 10E, Ctrl+3: Remove 10E)", new Vector2(10, 30), Microsoft.Xna.Framework.Color.White);
         _spriteBatch.DrawString(_font, $"Reset: Ctrl+R", new Vector2(10, 50), Microsoft.Xna.Framework.Color.White);
         _spriteBatch.End();
 
         base.Draw(gameTime);
-    }
-
-    private void AddESphere()
-    {
-        if (_eSpheres.Count >= 100) return;
-
-        // Find a random MP particle to spawn near
-        if (_mpSpheres.Count > 0)
-        {
-            var targetMP = _mpSpheres[_random.Next(_mpSpheres.Count)];
-            
-            // Generate a random offset within a small radius (0.5 units) from the MP particle
-            Vector3 offset = new Vector3(
-                (float)(_random.NextDouble() - 0.5) * 1.0f,
-                (float)(_random.NextDouble() - 0.5) * 1.0f,
-                (float)(_random.NextDouble() - 0.5) * 1.0f
-            );
-            
-            // Spawn the E particle near the MP particle
-            Vector3 position = targetMP.Position + offset;
-            _eSpheres.Add(new ESphere(position, 1.0f));
-            Console.WriteLine($"Added E particle near MP particle. Total E particles: {_eSpheres.Count}");
-        }
-        else
-        {
-            // If no MP particles exist, spawn at a random position
-            Vector3 position = new Vector3(
-                (float)(_random.NextDouble() - 0.5) * 10,
-                (float)(_random.NextDouble() - 0.5) * 10,
-                (float)(_random.NextDouble() - 0.5) * 10
-            );
-            _eSpheres.Add(new ESphere(position, 1.0f));
-            Console.WriteLine($"Added E particle at random position. Total E particles: {_eSpheres.Count}");
-        }
     }
 
     private void HandleInput()
@@ -258,49 +224,70 @@ public class SphereSimulation : Game
         if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
             Exit();
 
-        // Reset simulation (Ctrl + R)
-        if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.R) && 
-            keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
-            !previousKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.R))
+        // Handle Ctrl + number combinations
+        if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
         {
-            SpawnSpheres();
-            System.Console.WriteLine("Simulation reset");
-        }
-
-        // Add one E sphere (Ctrl + 1)
-        if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D1) && 
-            keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
-            !previousKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D1))
-        {
-            if (_numESpheres < MAX_E_PARTICLES)
+            if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D1) && 
+                previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.D1))
             {
-                AddESphere();
+                // Add 100 E particles
+                for (int i = 0; i < 100; i++)
+                {
+                    Vector3 position = new Vector3(
+                        (float)(_random.NextDouble() * 40 - 20),
+                        (float)(_random.NextDouble() * 40 - 20),
+                        (float)(_random.NextDouble() * 40 - 20)
+                    );
+                    _eSpheres.Add(new ESphere(position, _repulsionStrength));
+                    _numESpheres++;
+                }
+            }
+            else if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D2) && 
+                     previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.D2))
+            {
+                // Add 10 E particles
+                for (int i = 0; i < 10; i++)
+                {
+                    Vector3 position = new Vector3(
+                        (float)(_random.NextDouble() * 40 - 20),
+                        (float)(_random.NextDouble() * 40 - 20),
+                        (float)(_random.NextDouble() * 40 - 20)
+                    );
+                    _eSpheres.Add(new ESphere(position, _repulsionStrength));
+                    _numESpheres++;
+                }
+            }
+            else if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D3) && 
+                     previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.D3))
+            {
+                // Remove 10 random E particles
+                for (int i = 0; i < 10 && _eSpheres.Count > 0; i++)
+                {
+                    int randomIndex = _random.Next(_eSpheres.Count);
+                    _eSpheres.RemoveAt(randomIndex);
+                    _numESpheres--;
+                }
+            }
+        }
+        else
+        {
+            // Handle regular number keys
+            if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D1) && 
+                previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.D1))
+            {
+                // Add one E particle
+                Vector3 position = new Vector3(
+                    (float)(_random.NextDouble() * 40 - 20),
+                    (float)(_random.NextDouble() * 40 - 20),
+                    (float)(_random.NextDouble() * 40 - 20)
+                );
+                _eSpheres.Add(new ESphere(position, _repulsionStrength));
                 _numESpheres++;
-                System.Console.WriteLine($"Added E particle. Total: {_numESpheres}/{MAX_E_PARTICLES}");
             }
-        }
-
-        // Remove one random E sphere (Ctrl + 2)
-        if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D2) && 
-            keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
-            !previousKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D2))
-        {
-            if (_eSpheres.Count > 0)
+            else if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D2) && 
+                     previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.D2))
             {
-                int randomIndex = _random.Next(_eSpheres.Count);
-                _eSpheres.RemoveAt(randomIndex);
-                _numESpheres--;
-                System.Console.WriteLine($"Removed random E sphere. Total: {_numESpheres}");
-            }
-        }
-
-        // Add one MP sphere (Ctrl + 3)
-        if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D3) && 
-            keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
-            !previousKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D3))
-        {
-            if (_numMPSpheres < MAX_MP_PARTICLES)
-            {
+                // Add one MP particle
                 Vector3 position = new Vector3(
                     (float)(_random.NextDouble() * 40 - 20),
                     (float)(_random.NextDouble() * 40 - 20),
@@ -308,21 +295,28 @@ public class SphereSimulation : Game
                 );
                 _mpSpheres.Add(new MPSphere(position, _attractionStrength, _mpSphereSize));
                 _numMPSpheres++;
-                System.Console.WriteLine($"Added MP particle. Total: {_numMPSpheres}/{MAX_MP_PARTICLES}");
             }
-        }
-
-        // Remove one MP sphere (Ctrl + 4)
-        if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D4) && 
-            keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
-            !previousKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D4))
-        {
-            if (_mpSpheres.Count > 0)
+            else if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D3) && 
+                     previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.D3))
             {
-                int randomIndex = _random.Next(_mpSpheres.Count);
-                _mpSpheres.RemoveAt(randomIndex);
-                _numMPSpheres--;
-                System.Console.WriteLine($"Removed random MP sphere. Total: {_numMPSpheres}");
+                // Remove one random E particle
+                if (_eSpheres.Count > 0)
+                {
+                    int randomIndex = _random.Next(_eSpheres.Count);
+                    _eSpheres.RemoveAt(randomIndex);
+                    _numESpheres--;
+                }
+            }
+            else if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D4) && 
+                     previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.D4))
+            {
+                // Remove one random MP particle
+                if (_mpSpheres.Count > 0)
+                {
+                    int randomIndex = _random.Next(_mpSpheres.Count);
+                    _mpSpheres.RemoveAt(randomIndex);
+                    _numMPSpheres--;
+                }
             }
         }
 
